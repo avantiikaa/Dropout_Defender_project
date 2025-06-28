@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgHvZr6ItIZtb5Eu6Ocxnl8Gw4aWEys8Y",
+            authDomain: "dropoutdefender.firebaseapp.com",
+            databaseURL: "https://dropoutdefender-default-rtdb.firebaseio.com",
+            projectId: "dropoutdefender",
+            storageBucket: "dropoutdefender.firebasestorage.app",
+            messagingSenderId: "981706129935",
+            appId: "1:981706129935:web:03fcc0dd69b11e493d997a"
+        };
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    </script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-primary">
+        <div class="container">
+            <a class="navbar-brand text-white" href="#"><i class="fas fa-chalkboard-teacher"></i> Teacher Dashboard</a>
+            <a href="index.html" class="btn btn-danger">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2 class="text-center mb-4">Welcome, Teacher</h2>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">CGPA of Students</div>
+                    <div class="card-body">
+                        <canvas id="cgpaChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">Dropout Prediction</div>
+                    <div class="card-body">
+                        <canvas id="dropoutChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <label for="filter_academic_year" class="form-label"><strong>Filter by Academic Year:</strong></label>
+            <select id="filter_academic_year" class="form-select" onchange="loadStudents()">
+                <option value="">All Academic Years</option>
+                <option value="FE">FE - First Year</option>
+                <option value="SE">SE - Second Year</option>
+                <option value="TE">TE - Third Year</option>
+                <option value="BE">BE - Final Year</option>
+            </select>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header bg-primary text-white">Student Performance Data</div>
+            <div class="table-responsive p-3">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Student ID</th>
+                            <th>Attendance</th>
+                            <th>Academic Year</th>
+                            <th>CGPA</th>
+                            <th>Backlogs</th>
+                            <th>Dropout Prediction</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentData"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const students = [
+            // Your hardcoded data here...
+            { name: "John", studentid: 1, attendance: 30, academicyear: "FE", cgpa: 5.0, backlogs: 3, dropout: true },
+            { name: "Payal", studentid: 2, attendance: 29, academicyear: "SE", cgpa: 5.2, backlogs: 5, dropout: true },
+            { name: "Sanika", studentid: 3, attendance: 96, academicyear: "TE", cgpa: 5.7, backlogs: 0, dropout: false },
+            { name: "Williams", studentid: 4, attendance: 51, academicyear: "BE", cgpa: 7.0, backlogs: 0, dropout: false },
+            { name: "Sonal", studentid: 5, attendance: 40, academicyear: "FE", cgpa: 6.0, backlogs: 1, dropout: true },
+            { name: "Avantika", studentid: 6, attendance: 99, academicyear: "SE", cgpa: 8.1, backlogs: 0, dropout: false },
+            { name: "Sarthak", studentid: 7, attendance: 39, academicyear: "TE", cgpa: 5.1, backlogs: 4, dropout: true },
+            { name: "Aayush", studentid: 8, attendance: 70, academicyear: "BE", cgpa: 8.3, backlogs: 0, dropout: false },
+            { name: "Atharva", studentid: 9, attendance: 35, academicyear: "FE", cgpa: 4.2, backlogs: 2, dropout: true },
+            { name: "Sahil", studentid: 10, attendance: 29, academicyear: "SE", cgpa: 4.0, backlogs: 4, dropout: true },
+            { name: "Vedant", studentid: 11, attendance: 18, academicyear: "TE", cgpa: 4.6, backlogs: 1, dropout: true },
+            { name: "Mayank", studentid: 12, attendance: 30, academicyear: "BE", cgpa: 5.8, backlogs: 5, dropout: true },
+            { name: "Mansi", studentid: 13, attendance: 55, academicyear: "FE", cgpa: 8.7, backlogs: 0, dropout: false },
+            { name: "Rohan", studentid: 14, attendance: 30, academicyear: "SE", cgpa: 5.0, backlogs: 3, dropout: true },
+            { name: "Khushi", studentid: 15, attendance: 62, academicyear: "TE", cgpa: 8.5, backlogs: 0, dropout: false },
+            { name: "Shruti", studentid: 16, attendance: 20, academicyear: "BE", cgpa: 5.3, backlogs: 1, dropout: true },
+            { name: "Sneha", studentid: 17, attendance: 30, academicyear: "FE", cgpa: 6.0, backlogs: 4, dropout: true },
+            { name: "Mrunal", studentid: 18, attendance: 61, academicyear: "SE", cgpa: 8.9, backlogs: 0, dropout: false },
+            { name: "Hardik", studentid: 19, attendance: 39, academicyear: "TE", cgpa: 5.9, backlogs: 4, dropout: true },
+            { name: "Gargi", studentid: 20, attendance: 38, academicyear: "BE", cgpa: 4.0, backlogs: 3, dropout: true },
+            { name: "Jagruti", studentid: 21, attendance: 27, academicyear: "FE", cgpa: 4.2, backlogs: 3, dropout: true },
+            { name: "Tushar", studentid: 22, attendance: 73, academicyear: "SE", cgpa: 7.4, backlogs: 0, dropout: false },
+            { name: "Ketki", studentid: 23, attendance: 90, academicyear: "TE", cgpa: 6.6, backlogs: 0, dropout: false },
+            { name: "Anushree", studentid: 24, attendance: 20, academicyear: "BE", cgpa: 4.4, backlogs: 1, dropout: true },
+            { name: "Mrudula", studentid: 25, attendance: 73, academicyear: "FE", cgpa: 6.7, backlogs: 0, dropout: false },
+            { name: "Shrushti", studentid: 26, attendance: 97, academicyear: "SE", cgpa: 9.1, backlogs: 0, dropout: false },
+            { name: "Kartik", studentid: 27, attendance: 35, academicyear: "TE", cgpa: 3.0, backlogs: 2, dropout: true },
+            { name: "Pradnya", studentid: 28, attendance: 32, academicyear: "BE", cgpa: 4.8, backlogs: 3, dropout: true },
+            { name: "Ranjana", studentid: 29, attendance: 20, academicyear: "FE", cgpa: 5.0, backlogs: 4, dropout: true },
+            { name: "Manisha", studentid: 30, attendance: 52, academicyear: "SE", cgpa: 8.4, backlogs: 0, dropout: false },
+            { name: "Seema", studentid: 31, attendance: 18, academicyear: "TE", cgpa: 6.0, backlogs: 1, dropout: true },
+            { name: "Fenil", studentid: 32, attendance: 30, academicyear: "BE", cgpa: 4.5, backlogs: 2, dropout: true },
+            { name: "Anvi", studentid: 33, attendance: 81, academicyear: "FE", cgpa: 7.0, backlogs: 0, dropout: false },
+            { name: "Dhanshree", studentid: 34, attendance: 88, academicyear: "SE", cgpa: 8.4, backlogs: 0, dropout: false },
+            { name: "Zoya", studentid: 35, attendance: 25, academicyear: "TE", cgpa: 3.6, backlogs: 4, dropout: true },
+            { name: "Ashish", studentid: 36, attendance: 24, academicyear: "BE", cgpa: 5.6, backlogs: 5, dropout: true },
+            { name: "Shweta", studentid: 37, attendance: 26, academicyear: "FE", cgpa: 6.0, backlogs: 2, dropout: true },
+            { name: "Harish", studentid: 38, attendance: 37, academicyear: "SE", cgpa: 5.9, backlogs: 3, dropout: true },
+            { name: "Sachin", studentid: 39, attendance: 29, academicyear: "TE", cgpa: 6.0, backlogs: 2, dropout: true },
+            { name: "Prasidh", studentid: 40, attendance: 23, academicyear: "BE", cgpa: 5.0, backlogs: 1, dropout: true },
+            { name: "Ankush", studentid: 41, attendance: 40, academicyear: "FE", cgpa: 5.7, backlogs: 3, dropout: true },
+            { name: "Summer", studentid: 42, attendance: 74, academicyear: "SE", cgpa: 8.6, backlogs: 0, dropout: false },
+            { name: "Aaradhya", studentid: 43, attendance: 20, academicyear: "TE", cgpa: 5.1, backlogs: 5, dropout: true },
+            { name: "Prathmesh", studentid: 44, attendance: 80, academicyear: "BE", cgpa: 6.2, backlogs: 0, dropout: false },
+            { name: "Jiya", studentid: 45, attendance: 10, academicyear: "FE", cgpa: 4.9, backlogs: 5, dropout: true },
+            { name: "Krisha", studentid: 46, attendance: 30, academicyear: "SE", cgpa: 3.4, backlogs: 4, dropout: true },
+            { name: "Laukik", studentid: 47, attendance: 25, academicyear: "TE", cgpa: 5.0, backlogs: 4, dropout: true },
+            { name: "Kaushik", studentid: 48, attendance: 34, academicyear: "BE", cgpa: 4.7, backlogs: 1, dropout: true },
+            { name: "Mona", studentid: 49, attendance: 37, academicyear: "FE", cgpa: 4.9, backlogs: 4, dropout: true },
+            { name: "Naina", studentid: 50, attendance: 28, academicyear: "SE", cgpa: 2.9, backlogs: 5, dropout: true },
+            { name: "Siya", studentid: 51, attendance: 24, academicyear: "TE", cgpa: 6.0, backlogs: 2, dropout: true },
+            { name: "Yash", studentid: 52, attendance: 27, academicyear: "BE", cgpa: 4.5, backlogs: 4, dropout: true },
+            { name: "Aditya", studentid: 53, attendance: 09, academicyear: "FE", cgpa: 5.5, backlogs: 0, dropout: false },
+            { name: "Veer", studentid: 54, attendance: 35, academicyear: "SE", cgpa: 5.8, backlogs: 3, dropout: true },
+            { name: "Kushal", studentid: 55, attendance: 24, academicyear: "TE", cgpa: 3.9, backlogs: 3, dropout: true },
+            { name: "Bhavesh", studentid: 56, attendance: 27, academicyear: "BE", cgpa: 5.5, backlogs: 5, dropout: true },
+            { name: "Ujwal", studentid: 57, attendance: 87, academicyear: "FE", cgpa: 8.3, backlogs: 0, dropout: false },
+            { name: "Annaya", studentid: 58, attendance: 39, academicyear: "SE", cgpa: 6.0, backlogs: 1, dropout: true },
+            { name: "Kajal", studentid: 59, attendance: 83, academicyear: "TE", cgpa: 8.2, backlogs: 0, dropout: false },
+            { name: "Umesh", studentid: 60, attendance: 96, academicyear: "BE", cgpa: 6.6, backlogs: 0, dropout: false },
+            { name: "Anil", studentid: 61, attendance: 28, academicyear: "FE", cgpa: 4.9, backlogs: 4, dropout: true },
+            { name: "Arvind", studentid: 62, attendance: 77, academicyear: "SE", cgpa: 5.6, backlogs: 0, dropout: false },
+            { name: "Rohit", studentid: 63, attendance: 29, academicyear: "TE", cgpa: 5.9, backlogs: 4, dropout: true },
+            { name: "Sohail", studentid: 64, attendance: 31, academicyear: "BE", cgpa: 3.8, backlogs: 3, dropout: true },
+            { name: "Ishan", studentid: 65, attendance: 65, academicyear: "FE", cgpa: 9.5, backlogs: 0, dropout: false },
+            { name: "Mrunmayi", studentid: 66, attendance: 30, academicyear: "SE", cgpa: 5.9, backlogs: 3, dropout: true },
+            { name: "Vishakha", studentid: 67, attendance: 92, academicyear: "TE", cgpa: 9.2, backlogs: 0, dropout: false },
+            { name: "Sumit", studentid: 68, attendance: 30, academicyear: "BE", cgpa: 4.5, backlogs: 5, dropout: true },
+            { name: "Sushant", studentid: 69, attendance: 61, academicyear: "FE", cgpa: 7.5, backlogs: 0, dropout: false },
+            { name: "Prakruti", studentid: 70, attendance: 69, academicyear: "SE", cgpa: 8.2, backlogs: 0, dropout: false },
+            { name: "Vaidhehi", studentid: 71, attendance: 20, academicyear: "TE", cgpa: 2.9, backlogs: 3, dropout: true },
+            { name: "Harmi", studentid: 72, attendance: 69, academicyear: "BE", cgpa: 8.4, backlogs: 0, dropout: false },
+            { name: "Simran", studentid: 73, attendance: 30, academicyear: "SE", cgpa: 5.8, backlogs: 5, dropout: true },
+            { name: "Prem", studentid: 74, attendance: 31, academicyear: "FE", cgpa: 6.0, backlogs: 1, dropout: true },
+            { name: "Jack", studentid: 75, attendance: 40, academicyear: "TE", cgpa: 4.5, backlogs: 5, dropout: true },
+            { name: "Shivani", studentid: 76, attendance: 24, academicyear: "BE", cgpa: 3.5, backlogs: 1, dropout: true },
+            { name: "Saurabh", studentid: 77, attendance: 21, academicyear: "FE", cgpa: 4.4, backlogs: 4, dropout: true },
+            { name: "Saurav", studentid: 78, attendance: 25, academicyear: "SE", cgpa: 5.6, backlogs: 5, dropout: true },
+            { name: "Gaurav", studentid: 79, attendance: 29, academicyear: "TE", cgpa: 4.5, backlogs: 5, dropout: true },
+            { name: "Heer", studentid: 80, attendance: 15, academicyear: "BE", cgpa: 5.8, backlogs: 3, dropout: true },
+            { name: "Ram", studentid: 81, attendance: 16, academicyear: "FE", cgpa: 3.9, backlogs: 4, dropout: true },
+            { name: "Laxman", studentid: 82, attendance: 57, academicyear: "SE", cgpa: 8.0, backlogs: 0, dropout: false },
+            { name: "Bharat", studentid: 83, attendance: 81, academicyear: "TE", cgpa: 7.8, backlogs: 0, dropout: false },
+            { name: "Luv", studentid: 84, attendance: 20, academicyear: "BE", cgpa: 5.2, backlogs: 1, dropout: true },
+            { name: "Khush", studentid: 85, attendance: 63, academicyear: "FE", cgpa: 9.4, backlogs: 0, dropout: false },
+            { name: "Arun", studentid: 86, attendance: 19, academicyear: "SE", cgpa: 4.7, backlogs: 3, dropout: true },
+            { name: "Manoj", studentid: 87, attendance: 56, academicyear: "TE", cgpa: 7.8, backlogs: 0, dropout: false },
+            { name: "Tejas", studentid: 88, attendance: 10, academicyear: "BE", cgpa: 4.6, backlogs: 3, dropout: true },
+            { name: "Ankur", studentid: 89, attendance: 27, academicyear: "FE", cgpa: 4.8, backlogs: 4, dropout: true },
+            { name: "Varad", studentid: 90, attendance: 26, academicyear: "SE", cgpa: 6.0, backlogs: 1, dropout: true },
+            { name: "Amay", studentid: 91, attendance: 17, academicyear: "TE", cgpa: 5.0, backlogs: 2, dropout: true },
+            { name: "Anshika", studentid: 92, attendance: 18, academicyear: "BE", cgpa: 3.6, backlogs: 5, dropout: true },
+            { name: "Gaurang", studentid: 93, attendance: 15, academicyear: "FE", cgpa: 2.7, backlogs: 1, dropout: true },
+            { name: "Arnav", studentid: 94, attendance: 30, academicyear: "SE", cgpa: 3.8, backlogs: 1, dropout: true },
+            { name: "Janhvi", studentid: 95, attendance: 12, academicyear: "TE", cgpa: 4.6, backlogs: 2, dropout: true },
+            { name: "Meera", studentid: 96, attendance: 18, academicyear: "BE", cgpa: 4.7, backlogs: 5, dropout: true },
+            { name: "Seeta", studentid: 97, attendance: 19, academicyear: "FE", cgpa: 6.0, backlogs: 3, dropout: true },
+            { name: "Geeta", studentid: 98, attendance: 25, academicyear: "SE", cgpa: 4.5, backlogs: 2, dropout: true },
+            { name: "Neeta", studentid: 99, attendance: 20, academicyear: "TE", cgpa: 5.8, backlogs: 5, dropout: true },
+            { name: "Surekha", studentid: 100, attendance: 24, academicyear: "BE", cgpa: 6.0, backlogs: 1, dropout: true }
+        ];
+
+        let cgpaChart, dropoutChart;
+
+        function loadStudents() {
+            const selectedYear = document.getElementById("filter_academic_year").value;
+            const tableBody = document.getElementById("studentData");
+            tableBody.innerHTML = "";
+
+            db.collection("students").get().then((querySnapshot) => {
+                let firebaseStudents = [];
+                querySnapshot.forEach((doc) => {
+                    firebaseStudents.push(doc.data());
+                });
+
+                // Combine hardcoded and Firebase data
+                let allStudents = [...students, ...firebaseStudents];
+
+                const filteredStudents = selectedYear ? allStudents.filter(s => s.academicYear === selectedYear || s.academicyear === selectedYear) : allStudents;
+
+                filteredStudents.forEach(student => {
+                    const row = `<tr>
+                        <td>${student.name}</td>
+                        <td>${student.studentId || student.studentid}</td>
+                        <td>${student.attendance}%</td>
+                        <td>${student.academicYear || student.academicyear}</td>
+                        <td>${student.overallCgpa || student.cgpa}</td>
+                        <td>${student.totalBacklogs || student.backlogs}</td>
+                        <td>${(student.totalBacklogs || student.backlogs) >= 8 || student.dropout ? '<span class="badge bg-danger">At Risk</span>' : '<span class="badge bg-success">Safe</span>'}</td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                });
+
+                updateCharts(filteredStudents);
+            }).catch((error) => {
+                console.error("Error getting documents: ", error);
+            });
+        }
+
+        function updateCharts(filteredStudents) {
+            // CGPA Data
+            const names = filteredStudents.map(s => s.name);
+            const cgpas = filteredStudents.map(s => s.overallCgpa || s.cgpa);
+            const dropoutCounts = filteredStudents.reduce((acc, s) => {
+                (s.totalBacklogs || s.backlogs) >= 8 || s.dropout ? acc[0]++ : acc[1]++;
+                return acc;
+            }, [0, 0]); // [dropout, not dropout]
+
+            // Destroy previous charts to avoid duplication
+            if (cgpaChart) cgpaChart.destroy();
+            if (dropoutChart) dropoutChart.destroy();
+
+            // CGPA Bar Chart
+            const ctx1 = document.getElementById("cgpaChart").getContext("2d");
+            cgpaChart = new Chart(ctx1, {
+                type: "bar",
+                data: {
+                    labels: names,
+                    datasets: [{
+                        label: "CGPA",
+                        data: cgpas,
+                        backgroundColor: "rgba(54, 162, 235, 0.6)",
+                        borderColor: "rgba(54, 162, 235, 1)",
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true, max: 10 }
+                    }
+                }
+            });
+
+            // Dropout Prediction Pie Chart
+            const ctx2 = document.getElementById("dropoutChart").getContext("2d");
+            dropoutChart = new Chart(ctx2, {
+                type: "pie",
+                data: {
+                    labels: ["At Risk", "Safe"],
+                    datasets: [{
+                        data: dropoutCounts,
+                        backgroundColor: ["#dc3545", "#28a745"]
+                    }]
+                },
+                options: { responsive: true }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadStudents();
+        });
+    </script>
+</body>
+</html>

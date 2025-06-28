@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grades</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-light bg-primary">
+        <div class="container">
+            <a class="navbar-brand text-white" href="#">Student Grades</a>
+            <a href="student_dashboard.html" class="btn btn-light">Back to Dashboard</a>
+            <a href="teacher_dashboard.html" class="btn btn-light">Back to  Teacher Dashboard</a>
+            <a href="parent_dashboard.html" class="btn btn-light">Back to Parent Dashboard</a>
+            
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2>Your Grades</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Grade</th>
+                    <th>Due Date</th>
+                </tr>
+            </thead>
+            <tbody id="gradesTable">
+                <!-- Grades will be dynamically inserted here -->
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="container mt-4">
+        <h2>Enter Grades</h2>
+        <form id="gradeForm">
+            <div class="mb-3">
+                <label for="subject" class="form-label">Subject</label>
+                <input type="text" class="form-control" id="subject" required>
+            </div>
+            <div class="mb-3">
+                <label for="grade" class="form-label">Grade</label>
+                <input type="text" class="form-control" id="grade" required>
+            </div>
+            <div class="mb-3">
+                <label for="dueDate" class="form-label">Due Date</label>
+                <input type="date" class="form-control" id="dueDate" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Grade</button>
+        </form>
+    </div>
+    
+    <script>
+        function loadGrades() {
+            let grades = JSON.parse(localStorage.getItem('grades')) || [];
+            let tableBody = document.getElementById('gradesTable');
+            tableBody.innerHTML = '';
+            grades.forEach(grade => {
+                let row = `<tr><td>${grade.subject}</td><td>${grade.grade}</td><td>${grade.dueDate}</td></tr>`;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', loadGrades);
+
+        document.getElementById('gradeForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            let subject = document.getElementById('subject').value;
+            let grade = document.getElementById('grade').value;
+            let dueDate = document.getElementById('dueDate').value;
+            
+            let grades = JSON.parse(localStorage.getItem('grades')) || [];
+            grades.push({ subject, grade, dueDate });
+            localStorage.setItem('grades', JSON.stringify(grades));
+            
+            document.getElementById('gradeForm').reset();
+            loadGrades();
+        });
+    </script>
+</body>
+</html>

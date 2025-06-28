@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            background-color: #f8f9fa; /* Light gray background */
+        }
+        .navbar {
+            background-color: #007bff; /* Blue navbar */
+        }
+        .navbar-brand {
+            color: white !important;
+            font-weight: bold;
+        }
+        .navbar .btn-danger {
+            background-color: #dc3545; /* Red logout button */
+            border-color: #dc3545;
+        }
+        .container {
+            margin-top: 2rem;
+        }
+        .dashboard-card {
+            border: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            margin-bottom: 20px; /* Spacing between cards */
+            transition: transform 0.2s; /* Smooth hover effect */
+
+        }
+        .dashboard-card:hover{
+            transform: scale(1.05);
+        }
+        .dashboard-card-header {
+            background-color: #fff;
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .dashboard-card-body {
+            padding: 1.5rem;
+        }
+        .list-group-item {
+            border: none; /* Remove default border */
+            padding: 0.75rem 1rem; /* Adjust padding */
+            transition: background-color 0.3s;
+        }
+
+        .list-group-item:hover {
+            background-color: #f0f0f0; /* Light gray on hover */
+            cursor: pointer; /* Indicate interactivity */
+        }
+        .list-group-item i{
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="#">Parent Dashboard</a>
+            <a href="index.html" class="btn btn-danger">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2>Welcome, Parent</h2>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card dashboard-card">
+                    <div class="card-header dashboard-card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-line"></i> Student Performance</h5>
+                    </div>
+                    <div class="card-body dashboard-card-body">
+                        <p>View your child's academic progress.</p>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><a href="#" id="viewGrades"><i class="fas fa-graduation-cap"></i> Grades</a></li>
+                            <li class="list-group-item"><a href="#"><i class="fas fa-chart-bar"></i> Progress Reports</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card dashboard-card">
+                    <div class="card-header dashboard-card-header">
+                        <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Attendance</h5>
+                    </div>
+                    <div class="card-body dashboard-card-body">
+                        <p>Track your child's attendance records.</p>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><a href="#"><i class="fas fa-calendar-days"></i> Daily Attendance</a></li>
+                            <li class="list-group-item"><a href="#"><i class="fas fa-chart-pie"></i> Attendance Summary</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card dashboard-card">
+                    <div class="card-header dashboard-card-header">
+                        <h5 class="mb-0"><i class="fas fa-envelope"></i> Communication</h5>
+                    </div>
+                    <div class="card-body dashboard-card-body">
+                        <p>Communicate with teachers and school staff.</p>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><a href="#"><i class="fas fa-comments"></i> Message Teachers</a></li>
+                            <li class="list-group-item"><a href="#"><i class="fas fa-bullhorn"></i> School Announcements</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('viewGrades').addEventListener('click', function(event) {
+            event.preventDefault();
+            alert('Viewing grades! Implement grades viewing logic here.');
+            window.location.href = 'grades.html'; // Uncomment if you have a grades page
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+</body>
+</html>

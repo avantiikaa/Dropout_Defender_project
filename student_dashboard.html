@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgHvZr6ItIZtb5Eu6Ocxnl8Gw4aWEys8Y",
+            authDomain: "dropoutdefender.firebaseapp.com",
+            databaseURL: "https://dropoutdefender-default-rtdb.firebaseio.com",
+            projectId: "dropoutdefender",
+            storageBucket: "dropoutdefender.firebasestorage.app",
+            messagingSenderId: "981706129935",
+            appId: "1:981706129935:web:03fcc0dd69b11e493d997a"
+        };
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        
+        body {
+            background: linear-gradient(to right, #141E30, #ecf802);
+            font-family: 'Poppins', sans-serif;
+            color: #fff;
+            text-align: center;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            color: white !important;
+        }
+
+        .btn-danger {
+            background-color: #ff4d4d;
+            border: none;
+            transition: 0.3s;
+        }
+        .btn-danger:hover {
+            background-color: #ff1a1a;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        .dashboard-card {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+
+        input, select {
+            border-radius: 8px;
+            padding: 12px;
+            border: none;
+            margin-bottom: 12px;
+            width: 80%;
+            outline: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            text-align: center;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        select option {
+            background: black;
+            color: white;
+        }
+
+        input::placeholder {
+            color: #ddd;
+        }
+
+        .prediction-btn, .add-student-btn {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            margin-top: 20px;
+            cursor: pointer;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            transition: 0.3s;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        .prediction-btn:hover, .add-student-btn:hover {
+            background: #e67e22;
+            transform: scale(1.05);
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .sem-box {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px;
+            width: 22%;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        .reset-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .reset-btn:hover {
+            color: #ff9800;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container d-flex justify-content-between">
+            <a class="navbar-brand" href="#">📚 Student Dashboard</a>
+            <a href="index.html" class="btn btn-danger">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 class="text-center mb-4">🎓 Dropout Prediction Status</h2>
+
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <h5 class="box-title">🔍 Student Information</h5>
+                
+                <form id="predictionForm">
+                    <input type="text" id="name" placeholder="👤 Name" required>
+                    <input type="text" id="student_id" placeholder="🆔 Student ID" required>
+                    <input type="number" id="attendance" placeholder="📅 Attendance (%)" min="0" max="100" required>
+
+                    <select id="academic_year">
+                        <option value="" disabled selected hidden>🎓 Select Academic Year</option>
+                        <option value="FE">FE - First Year</option>
+                        <option value="SE">SE - Second Year</option>
+                        <option value="TE">TE - Third Year</option>
+                        <option value="BE">BE - Final Year</option>
+                    </select>
+
+                    <h5 class="box-title mt-3">📊 Semester-wise Performance</h5>
+                    <div class="row" id="semesterBoxes"></div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <input type="number" step="0.1" id="overall_cgpa" placeholder="🎓 Overall CGPA" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="number" id="total_backlogs" placeholder="📚 Total Backlogs" readonly>
+                        </div>
+                    </div>
+
+                    <button type="button" class="prediction-btn" onclick="predictDropout()">Predict Dropout Status</button>
+                    <button type="button" class="add-student-btn" onclick="addStudent()">➕ Add Student</button>
+                </form>
+
+                <div id="result" class="result-box mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const semesterBoxes = document.getElementById("semesterBoxes");
+
+        for (let i = 1; i <= 8; i++) {
+            semesterBoxes.innerHTML += `
+                <div class="sem-box">
+                    <button type="button" class="reset-btn" onclick="resetSemester(${i})">🔄</button>
+                    <strong>Semester ${i}</strong>
+                    <input type="number" id="sem${i}_passed" placeholder="✔️ Subjects Passed" min="0" max="6" required oninput="updateBacklogs(${i})">
+                    <input type="number" step="0.1" id="sem${i}_cgpa" placeholder="🎓 CGPA" required oninput="updateOverall()">
+                    <input type="number" id="sem${i}_backlog" placeholder="❌ Backlogs" min="0" max="6" readonly>
+                </div>
+            `;
+        }
+        function resetSemester(sem) {
+            document.getElementById(`sem${sem}_passed`).value = "";
+            document.getElementById(`sem${sem}_cgpa`).value = "";
+            document.getElementById(`sem${sem}_backlog`).value = "";
+            updateOverall(); 
+        }
+
+        function updateBacklogs(sem) {
+            let subjectsPassed = parseInt(document.getElementById(`sem${sem}_passed`).value) || 0;
+            document.getElementById(`sem${sem}_backlog`).value = 6 - subjectsPassed;
+            updateOverall();
+        }
+
+        function updateOverall() {
+            let totalCGPA = 0, totalBacklogs = 0, count = 0;
+
+            for (let i = 1; i <= 8; i++) {
+                let cgpa = parseFloat(document.getElementById(`sem${i}_cgpa`).value) || 0;
+                let backlogs = parseInt(document.getElementById(`sem${i}_backlog`).value) || 0;
+
+                if (cgpa) {
+                    totalCGPA += cgpa;
+                    count++;
+                }
+                totalBacklogs += backlogs;
+            }
+
+            document.getElementById("overall_cgpa").value = count ? (totalCGPA / count).toFixed(2) : "";
+            document.getElementById("total_backlogs").value = totalBacklogs;
+        }
+
+        function predictDropout() {
+            let totalBacklogs = parseInt(document.getElementById("total_backlogs").value) || 0;
+            document.getElementById("result").innerHTML = totalBacklogs >= 8 ? "🚨 Dropout" : "✅ Not Dropout";
+        }
+
+        
+        function addStudent() {
+            const studentId = document.getElementById("student_id").value;
+            const name = document.getElementById("name").value;
+            const attendance = parseInt(document.getElementById("attendance").value);
+            const academicYear = document.getElementById("academic_year").value;
+            const overallCgpa = parseFloat(document.getElementById("overall_cgpa").value) || 0;
+            const totalBacklogs = parseInt(document.getElementById("total_backlogs").value) || 0;
+
+            if (!name || !studentId || isNaN(attendance) || !academicYear) {
+                alert("Please fill all fields!");
+                return;
+            }
+
+            // ✅ Save to Firebase
+            if (typeof firebase !== 'undefined' && firebase.firestore) {
+                db.collection("students").doc(studentId).set({
+                    name: name,
+                    studentId: studentId,
+                    attendance: attendance,
+                    academicYear: academicYear,
+                    overallCgpa: overallCgpa,
+                    totalBacklogs: totalBacklogs,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                })
+                .then(() => {
+                    alert("Student added to Firebase successfully!");
+                    console.log("Data added to Firebase:", {
+                        name, studentId, attendance, academicYear, overallCgpa, totalBacklogs
+                    });
+                })
+                .catch((error) => {
+                    console.error("Error adding student to Firebase:", error);
+                    alert("Failed to add student to Firebase!");
+                });
+            } else {
+                alert("Firebase is not initialized. Please include the Firebase SDK.");
+            }
+        }
+    </script>
+    <script>
+        function checkDropoutStatus(student) {
+    const { fe, se, te, be } = student.backlogs;
+    
+    // FE to SE criteria
+    if ((fe.sem1 + fe.sem2) >= 8) {
+        return "Dropout: More than 8 KTs in First Year (FE)";
+    }
+    
+    // SE to TE criteria
+    if ((se.sem3 + se.sem4) >= 8 || (fe.sem1 + fe.sem2) > 0) {
+        return "Dropout: More than 8 KTs in Second Year (SE) or pending FE subjects";
+    }
+    
+    // TE to BE criteria
+    if ((te.sem5 + te.sem6) >= 8 || (se.sem3 + se.sem4) > 0) {
+        return "Dropout: More than 8 KTs in Third Year (TE) or pending SE subjects";
+    }
+    
+    // BE Completion Criteria
+    if ((be.sem7 + be.sem8) > 0 || (te.sem5 + te.sem6) > 0) {
+        return "Pending subjects must be cleared before BE completion";
+    }
+    
+    return "Eligible: Student is progressing normally";
+}
+    </script>
+    <script>
+        // Modify the updateBacklogs function to restrict CGPA input based on passed subjects
+function updateBacklogs(sem) {
+    let subjectsPassed = parseInt(document.getElementById(`sem${sem}_passed`).value) || 0;
+    document.getElementById(`sem${sem}_backlog`).value = 6 - subjectsPassed;
+
+    // Disable or enable the CGPA input based on the number of subjects passed
+    let cgpaInput = document.getElementById(`sem${sem}_cgpa`);
+    if (subjectsPassed === 6) {
+        cgpaInput.disabled = false;
+    } else {
+        cgpaInput.disabled = true;
+        cgpaInput.value = "";  // Clear CGPA field if not all subjects are passed
+    }
+
+    updateOverall();
+}
+
+// Update the resetSemester function to account for CGPA input disabling
+function resetSemester(sem) {
+    document.getElementById(`sem${sem}_passed`).value = "";
+    document.getElementById(`sem${sem}_cgpa`).value = "";
+    document.getElementById(`sem${sem}_backlog`).value = "";
+    document.getElementById(`sem${sem}_cgpa`).disabled = true;  // Disable CGPA input on reset
+    updateOverall(); 
+}
+
+    </script>
+    </body>
+</html>
